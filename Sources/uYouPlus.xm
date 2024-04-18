@@ -652,17 +652,29 @@ BOOL isAd(YTIElementRenderer *self) {
 - (void)layoutSubviews {
     %orig;
     if (IS_ENABLED(@"hideDoubleTapToSeekOverlay_enabled")) {
-        self.scrimOverlay.backgroundColor = [UIColor clearColor];
+        self.frame = CGRectZero;
     }
 }
 %end
 
-// Disable pull to enter vertical fullscreen gesture - @bhackel
+// Disable pull to enter vertical/portrait fullscreen gesture - @bhackel
 // This was introduced in version 19.XX
+// This only applies to landscape videos
 %group gDisablePullToFull
-%hook YTColdConfig
-- (BOOL)enablePullToFull { return NO; }
-- (BOOL)enablePullToFullAlwaysExitFullscreenLandscape { return NO; }
+%hook YTWatchPullToFullController
+- (BOOL)shouldRecognizeOverscrollEventsFromWatchOverscrollController:(id)arg1 {
+    // Get the current player orientation
+    YTWatchViewController *watchViewController = self.playerViewSource;
+    NSUInteger allowedFullScreenOrientations = [watchViewController allowedFullScreenOrientations];
+    // Check if the current player orientation is portrait
+    if (allowedFullScreenOrientations == UIInterfaceOrientationMaskAllButUpsideDown
+            || allowedFullScreenOrientations == UIInterfaceOrientationMaskPortrait
+            || allowedFullScreenOrientations == UIInterfaceOrientationMaskPortraitUpsideDown) {
+        return %orig;
+    } else {
+        return NO;
+    }
+}
 %end
 %end
 
