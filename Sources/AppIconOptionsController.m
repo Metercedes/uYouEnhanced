@@ -7,6 +7,7 @@
 @property (strong, nonatomic) NSArray<NSString *> *appIcons;
 @property (assign, nonatomic) NSInteger selectedIconIndex;
 @property (strong, nonatomic) UIImageView *backButton;
+@property (assign, nonatomic) UIUserInterfaceStyle pageStyle;
 
 @end
 
@@ -23,6 +24,7 @@
     self.tableView = [[UITableView alloc] initWithFrame:self.view.bounds style:UITableViewStylePlain];
     self.tableView.dataSource = self;
     self.tableView.delegate = self;
+    self.tableView.backgroundColor = (self.pageStyle == UIUserInterfaceStyleLight) ? [UIColor whiteColor] : [UIColor blackColor];
     [self.view addSubview:self.tableView];
 
     UIBarButtonItem *backButton = [[UIBarButtonItem alloc] initWithTitle:@"" style:UIBarButtonItemStylePlain target:self action:@selector(back)];
@@ -32,18 +34,16 @@
     } else {
         backButton.image = backImage;
     }
-    [backButton setTitleTextAttributes:@{NSForegroundColorAttributeName: [UIColor whiteColor], NSFontAttributeName: [UIFont fontWithName:@"YTSans-Medium" size:17]} forState:UIControlStateNormal];
+    [backButton setTitleTextAttributes:@{NSForegroundColorAttributeName: [UIColor blackColor], NSFontAttributeName: [UIFont fontWithName:@"YTSans-Medium" size:20]} forState:UIControlStateNormal];
     self.navigationItem.leftBarButtonItem = backButton;
 
-    UIColor *buttonColor = [UIColor colorWithRed:203.0/255.0 green:22.0/255.0 blue:51.0/255.0 alpha:1.0];
-    UIBarButtonItem *resetButton = [[UIBarButtonItem alloc] initWithTitle:@"Reset" style:UIBarButtonItemStylePlain target:self action:@selector(resetIcon)];
-    [resetButton setTitleTextAttributes:@{NSForegroundColorAttributeName: buttonColor, NSFontAttributeName: [UIFont fontWithName:@"YTSans-Medium" size:17]} forState:UIControlStateNormal];
-    
+    UIBarButtonItem *resetButton = [[UIBarButtonItem alloc] initWithImage:[UIImage systemImageNamed:@"arrow.clockwise.circle.fill"] style:UIBarButtonItemStylePlain target:self action:@selector(resetIcon)];
+
     UIBarButtonItem *saveButton = [[UIBarButtonItem alloc] initWithTitle:@"Save" style:UIBarButtonItemStylePlain target:self action:@selector(saveIcon)];
-    [saveButton setTitleTextAttributes:@{NSForegroundColorAttributeName: buttonColor, NSFontAttributeName: [UIFont fontWithName:@"YTSans-Medium" size:17]} forState:UIControlStateNormal];
-    
+    [saveButton setTitleTextAttributes:@{NSForegroundColorAttributeName: [UIColor colorWithRed:203.0/255.0 green:22.0/255.0 blue:51.0/255.0 alpha:1.0], NSFontAttributeName: [UIFont fontWithName:@"YTSans-Medium" size:20]} forState:UIControlStateNormal];
+
     self.navigationItem.rightBarButtonItems = @[saveButton, resetButton];
-    
+
     NSString *path = [[NSBundle mainBundle] pathForResource:@"uYouPlus" ofType:@"bundle"];
     NSBundle *bundle = [NSBundle bundleWithPath:path];
     self.appIcons = [bundle pathsForResourcesOfType:@"png" inDirectory:@"AppIcons"];
@@ -57,10 +57,6 @@
     return self.appIcons.count;
 }
 
-- (CGFloat)tableView:(UITableView *)tableView heightForRowAtIndexPath:(NSIndexPath *)indexPath {
-    return 60.0;
-}
-
 - (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath {
     UITableViewCell *cell = [tableView dequeueReusableCellWithIdentifier:@"Cell"];
     if (!cell) {
@@ -68,14 +64,20 @@
     }
     
     NSString *iconPath = self.appIcons[indexPath.row];
-    cell.textLabel.text = [iconPath.lastPathComponent stringByDeletingPathExtension];
-    
     UIImage *iconImage = [UIImage imageWithContentsOfFile:iconPath];
-    cell.imageView.image = iconImage;
-    cell.imageView.layer.cornerRadius = 10.0;
-    cell.imageView.clipsToBounds = YES;
-    cell.imageView.frame = CGRectMake(10, 10, 40, 40);
-    cell.textLabel.frame = CGRectMake(60, 10, self.view.frame.size.width - 70, 40);
+    
+    cell.backgroundColor = [UIColor whiteColor];
+    cell.selectionStyle = UITableViewCellSelectionStyleNone;
+    
+    UIImageView *iconImageView = [[UIImageView alloc] initWithImage:iconImage];
+    iconImageView.frame = CGRectMake(16, 8, 24, 24);
+    [cell.contentView addSubview:iconImageView];
+    
+    UILabel *iconNameLabel = [[UILabel alloc] initWithFrame:CGRectMake(56, 0, self.view.frame.size.width - 56, 40)];
+    iconNameLabel.text = [iconPath.lastPathComponent stringByDeletingPathExtension];
+    iconNameLabel.textColor = [UIColor blackColor];
+    iconNameLabel.font = [UIFont systemFontOfSize:18.0 weight:UIFontWeightMedium];
+    [cell.contentView addSubview:iconNameLabel];
     
     if (indexPath.row == self.selectedIconIndex) {
         cell.accessoryType = UITableViewCellAccessoryCheckmark;
@@ -123,8 +125,9 @@
         } else {
             NSMutableDictionary *dict = [NSMutableDictionary dictionary];
             [dict setObject:iconURL forKey:@"iconURL"];
-            [dict writeToFile:[[NSBundle mainBundle] pathForResource:@"Info" ofType:@"plist"] atomically:YES];
-            
+            NSString *filePath = [[NSBundle mainBundle] pathForResource:@"Info" ofType:@"plist"];
+            [dict writeToFile:filePath atomically:YES];
+
             [self showAlertWithTitle:@"Alternate Icon" message:@"Please restart the app to apply the alternate icon"];
         }
     }
