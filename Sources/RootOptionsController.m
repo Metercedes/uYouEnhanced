@@ -3,6 +3,11 @@
 #import "ColourOptionsController2.h"
 
 @interface RootOptionsController ()
+
+- (UIImage *)resizeImage:(UIImage *)image newSize:(CGSize)newSize;
+@property (strong, nonatomic) UIButton *backButton;
+@property (assign, nonatomic) UIUserInterfaceStyle pageStyle;
+
 @end
 
 @implementation RootOptionsController
@@ -10,10 +15,20 @@
 - (void)viewDidLoad {
     [super viewDidLoad];
 
-    self.title = @"uYouPlus Extras Menu";
+    self.title = @"uYouEnhanced Extras Menu";
+    [self.navigationController.navigationBar setTitleTextAttributes:@{NSFontAttributeName: [UIFont fontWithName:@"YTSans-Bold" size:22], NSForegroundColorAttributeName: [UIColor whiteColor]}];
 
-    UIBarButtonItem *doneButton = [[UIBarButtonItem alloc] initWithBarButtonSystemItem:UIBarButtonSystemItemDone target:self action:@selector(done)];
-    self.navigationItem.leftBarButtonItem = doneButton;
+    self.backButton = [UIButton buttonWithType:UIButtonTypeCustom];
+    NSBundle *backIcon = [NSBundle bundleWithPath:[[NSBundle mainBundle] pathForResource:@"uYouPlus" ofType:@"bundle"]];
+    UIImage *backImage = [UIImage imageNamed:@"Back.png" inBundle:backIcon compatibleWithTraitCollection:nil];
+    backImage = [self resizeImage:backImage newSize:CGSizeMake(24, 24)];
+    backImage = [backImage imageWithRenderingMode:UIImageRenderingModeAlwaysTemplate];
+    [self.backButton setTintColor:[UIColor whiteColor]];
+    [self.backButton setImage:backImage forState:UIControlStateNormal];
+    [self.backButton addTarget:self action:@selector(back) forControlEvents:UIControlEventTouchUpInside];
+    [self.backButton setFrame:CGRectMake(0, 0, 24, 24)];
+    UIBarButtonItem *customBackButton = [[UIBarButtonItem alloc] initWithCustomView:self.backButton];
+    self.navigationItem.leftBarButtonItem = customBackButton;
 
     UITableViewStyle style;
     if (@available(iOS 13, *)) {
@@ -34,6 +49,14 @@
         [self.tableView.widthAnchor constraintEqualToAnchor:self.view.widthAnchor],
         [self.tableView.heightAnchor constraintEqualToAnchor:self.view.heightAnchor]
     ]];
+}
+
+- (UIImage *)resizeImage:(UIImage *)image newSize:(CGSize)newSize {
+    UIGraphicsBeginImageContextWithOptions(newSize, NO, [UIScreen mainScreen].scale);
+    [image drawInRect:CGRectMake(0, 0, newSize.width, newSize.height)];
+    UIImage *newImage = UIGraphicsGetImageFromCurrentImageContext();
+    UIGraphicsEndImageContext();
+    return newImage;
 }
 
 - (NSInteger)numberOfSectionsInTableView:(UITableView *)tableView {
@@ -77,7 +100,7 @@
                 cell.imageView.tintColor = cell.textLabel.textColor;
             }
             if (indexPath.row == 1) {
-                cell.textLabel.text = @"Custom LowContrastMode Color";
+                cell.textLabel.text = @"Custom Tint Color";
                 cell.imageView.image = [UIImage systemImageNamed:@"drop.fill"];
                 cell.imageView.tintColor = cell.textLabel.textColor;
             }
@@ -164,8 +187,8 @@
 
 @implementation RootOptionsController (Privates)
 
-- (void)done {
-    [self.presentingViewController dismissViewControllerAnimated:YES completion:nil];
+- (void)back {
+    [self.navigationController popViewControllerAnimated:YES];
 }
 
 @end

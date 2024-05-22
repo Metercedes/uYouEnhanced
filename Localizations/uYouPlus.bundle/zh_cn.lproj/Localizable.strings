@@ -61,7 +61,7 @@
 "STOCK_VOLUME_HUD_DESC" = "";
 
 // Video controls overlay options
-"VIDEO_PLAYER_OPTIONS" = "📹 视频播放器控制界面选项";
+"VIDEO_CONTROLS_OVERLAY_OPTIONS" = "📹 视频播放器控制界面选项";
 
 "HIDE_AUTOPLAY_SWITCH" = "隐藏自动播放模式开关";
 "HIDE_AUTOPLAY_SWITCH_DESC" = "隐藏视频播放器控制界面上的自动播放开关。";
@@ -147,3 +147,6 @@
 
 "FIX_GOOGLE_SIGNIN" = "修复 Google 账号登录问题（仅 TrollStore 用户有效）";
 "FIX_GOOGLE_SIGNIN_DESC" = "仅在使用 TrollStore 安装本 App 的情况下生效：启用本设置后即可正常登录您的 Google 账号。更改本设置后需要重启 App。";
+
+"FAKE_YOUR_PREMIUM_BENEFITS" = "Your Premium benefits";
+"FAKE_DOWNLOADS" = "Downloads";

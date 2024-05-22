@@ -61,7 +61,7 @@
 "STOCK_VOLUME_HUD_DESC" = "";
 
 // Video controls overlay options
-"VIDEO_PLAYER_OPTIONS" = "📹 Video controls overlay options";
+"VIDEO_CONTROLS_OVERLAY_OPTIONS" = "📹 Video controls overlay options";
 
 "HIDE_AUTOPLAY_SWITCH" = "Ascunde comutatorul Redare automată";
 "HIDE_AUTOPLAY_SWITCH_DESC" = "Ascunde comutatorul Redare automată din controalele video.";
@@ -147,3 +147,6 @@
 
 "FIX_GOOGLE_SIGNIN" = "Rezolvare problemă autentificare cont Google (doar pentru utilizatorii TrollStore)";
 "FIX_GOOGLE_SIGNIN_DESC" = "Activează această opțiune doar în cazul în care nu te poți autentifica în contul tău Google și apariția a fost instalată via TrollStore. Dacă te poți autentifica fără probleme, țineți setarea dezactivată. Este necesară repornirea aplicației.";
+
+"FAKE_YOUR_PREMIUM_BENEFITS" = "Your Premium benefits";
+"FAKE_DOWNLOADS" = "Downloads";

@@ -61,7 +61,7 @@
 "STOCK_VOLUME_HUD_DESC" = "";
 
 // Video controls overlay options
-"VIDEO_PLAYER_OPTIONS" = "📹 비디오 재생 오버레이 설정";
+"VIDEO_CONTROLS_OVERLAY_OPTIONS" = "📹 비디오 재생 오버레이 설정";
 
 "HIDE_AUTOPLAY_SWITCH" = "자동재생 스위치 숨기기";
 "HIDE_AUTOPLAY_SWITCH_DESC" = "비디오 재생 오버레이에서 자동재생 스위치를 숨깁니다.";
@@ -147,3 +147,6 @@
 
 "FIX_GOOGLE_SIGNIN" = "구글 로그인 문제 수정 (TrollStore 사용자만 해당)";
 "FIX_GOOGLE_SIGNIN_DESC" = "TrollStore를 통해 설치된 앱에만 적용됩니다: 구글 계정으로 로그인하려면 이 설정을 켜 주세요. 앱을 다시 시작해야 합니다.";
+
+"FAKE_YOUR_PREMIUM_BENEFITS" = "Your Premium benefits";
+"FAKE_DOWNLOADS" = "Downloads";

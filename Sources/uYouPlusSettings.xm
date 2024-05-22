@@ -9,9 +9,68 @@
 
 #define SECTION_HEADER(s) [sectionItems addObject:[%c(YTSettingsSectionItem) itemWithTitle:@"\t" titleDescription:[s uppercaseString] accessibilityIdentifier:nil detailTextBlock:nil selectBlock:^BOOL (YTSettingsCell *cell, NSUInteger sectionItemIndex) { return NO; }]]
 
-#define SWITCH_ITEM(t, d, k) [sectionItems addObject:[YTSettingsSectionItemClass switchItemWithTitle:t titleDescription:d accessibilityIdentifier:nil switchOn:IS_ENABLED(k) switchBlock:^BOOL (YTSettingsCell *cell, BOOL enabled) {[[NSUserDefaults standardUserDefaults] setBool:enabled forKey:k];return YES;} settingItemId:0]]
+// Basic Switch Item
+#define SWITCH_ITEM(t, d, k) \
+    [sectionItems addObject:[YTSettingsSectionItemClass \
+        switchItemWithTitle:t \
+        titleDescription:d \
+        accessibilityIdentifier:nil \
+        switchOn:IS_ENABLED(k) \
+        switchBlock:^BOOL (YTSettingsCell *cell, BOOL enable) { \
+            [[NSUserDefaults standardUserDefaults] setBool:enable forKey:k]; \
+            return YES; \
+        } \
+        settingItemId:0]]
 
-#define SWITCH_ITEM2(t, d, k) [sectionItems addObject:[YTSettingsSectionItemClass switchItemWithTitle:t titleDescription:d accessibilityIdentifier:nil switchOn:IS_ENABLED(k) switchBlock:^BOOL (YTSettingsCell *cell, BOOL enabled) {[[NSUserDefaults standardUserDefaults] setBool:enabled forKey:k];SHOW_RELAUNCH_YT_SNACKBAR;return YES;} settingItemId:0]]
+// Switch Item with Restart popup
+#define SWITCH_ITEM2(t, d, k) \
+    [sectionItems addObject:[YTSettingsSectionItemClass \
+        switchItemWithTitle:t \
+        titleDescription:d \
+        accessibilityIdentifier:nil \
+        switchOn:IS_ENABLED(k) \
+        switchBlock:^BOOL (YTSettingsCell *cell, BOOL enable) { \
+            [[NSUserDefaults standardUserDefaults] setBool:enable forKey:k]; \
+            SHOW_RELAUNCH_YT_SNACKBAR; \
+            return YES; \
+        } \
+        settingItemId:0]]
+
+// Switch Item with customizable code
+#define SWITCH_ITEM3(title, description, key, code) \
+    [sectionItems addObject:[YTSettingsSectionItemClass \
+        switchItemWithTitle:title \
+        titleDescription:description \
+        accessibilityIdentifier:nil \
+        switchOn:IS_ENABLED(key) \
+        switchBlock:^BOOL (YTSettingsCell *cell, BOOL enable) { \
+            code \
+        } \
+        settingItemId:0]]
+
+/** Example SWITCH_ITEM3 Usage
+SWITCH_ITEM3(
+    LOC(@"Your title here"), 
+    LOC(@"Your description here"), 
+    @"yourKey_enabled",
+    // Custom code goes in this block, wrapped in ({...}); Make sure to return YES at the end
+    ({
+        // Show an alert if this setting is being enabled
+        if (enable) {
+            UIAlertController *alert = [UIAlertController alertControllerWithTitle:@"Warning" message:@"Some alert message here" preferredStyle:UIAlertControllerStyleAlert];
+            UIAlertAction *okAction = [UIAlertAction actionWithTitle:@"OK" style:UIAlertActionStyleDefault handler:nil];
+            [alert addAction:okAction];
+            [settingsViewController presentViewController:alert animated:YES completion:nil];
+        }
+        // Update the setting in the storage and reload
+        [[NSUserDefaults standardUserDefaults] setBool:enable forKey:@"yourKey_enabled"];
+        [settingsViewController reloadData];
+        SHOW_RELAUNCH_YT_SNACKBAR;
+        return YES;
+    });
+);
+*/
+
 
 static int contrastMode() {
     NSString *appVersion = [[[NSBundle mainBundle] infoDictionary] objectForKey:@"CFBundleShortVersionString"];
@@ -79,20 +138,6 @@ extern NSBundle *uYouPlusBundle();
     Class YTSettingsSectionItemClass = %c(YTSettingsSectionItem);
     YTSettingsViewController *settingsViewController = [self valueForKey:@"_settingsViewControllerDelegate"];
 
-    # pragma mark - App Icon Customization
-    YTSettingsSectionItem *appIcon = [%c(YTSettingsSectionItem)
-        itemWithTitle:LOC(@"Change App Icon")
-        titleDescription:nil
-        accessibilityIdentifier:nil
-        detailTextBlock:nil
-        selectBlock:^BOOL (YTSettingsCell *cell, NSUInteger arg1) {
-            AppIconOptionsController *appIconController = [[AppIconOptionsController alloc] init];
-            [settingsViewController.navigationController pushViewController:appIconController animated:YES];
-            return YES;
-        }
-    ];
-    [sectionItems addObject:appIcon];
-
     # pragma mark - About
     // SECTION_HEADER(LOC(@"ABOUT"));
 
@@ -123,7 +168,7 @@ extern NSBundle *uYouPlusBundle();
     [sectionItems addObject:bug];
 
     YTSettingsSectionItem *developers = [%c(YTSettingsSectionItem)
-        itemWithTitle:LOC(@"Support the Developers")
+        itemWithTitle:LOC(@"SUPPORT_THE_DEVELOPERS")
         titleDescription:LOC(@"MiRO92, PoomSmart, level3tjg, BandarHL, julioverne & Galactic-dev")
         accessibilityIdentifier:nil
         detailTextBlock:^NSString *() {
@@ -134,6 +179,72 @@ extern NSBundle *uYouPlusBundle();
         }
     ];
     [sectionItems addObject:developers];
+
+/* UNFINISHED BUTTON
+    YTSettingsSectionItem *copySettings = [%c(YTSettingsSectionItem)
+        itemWithTitle:LOC(@"COPY_SETTINGS")
+        titleDescription:LOC(@"COPY_SETTINGS_DESC")
+        accessibilityIdentifier:nil
+        detailTextBlock:nil
+        selectBlock:^BOOL (YTSettingsCell *cell, NSUInteger arg1) {
+            NSUserDefaults *userDefaults = [NSUserDefaults standardUserDefaults];
+            NSMutableString *settingsString = [NSMutableString string];
+            NSArray *copyKeys = @[@"portraitFullscreen_enabled", @"slideToSeek_enabled", @"YTTapToSeek_enabled", @"doubleTapToSeek_disabled", @"snapToChapter_enabled", @"pinchToZoom_enabled", @"ytMiniPlayer_enabled", @"stockVolumeHUD_enabled", @"disablePullToFull_enabled", @"disableChapterSkip_enabled", @"alwaysShowRemainingTime_enabled", @"disableRemainingTime_enabled",
+                                  @"enableShareButton_enabled", @"enableSaveToButton_enabled", @"hideYTMusicButton_enabled", @"hideAutoplaySwitch_enabled", @"hideCC_enabled", @"hideVideoTitle_enabled", @"disableCollapseButton_enabled", @"disableFullscreenButton_enabled", @"hideHUD_enabled", @"hidePaidPromotionCard_enabled", @"hideChannelWatermark_enabled", @"hideVideoPlayerShadowOverlayButtons_enabled", @"hidePreviousAndNextButton_enabled", @"redProgressBar_enabled", @"hideHoverCards_enabled", @"hideRightPanel_enabled", @"hideFullscreenActions_enabled", @"noSuggestedVideo_enabled", @"hideHeatwaves_enabled", @"hideDoubleTapToSeekOverlay_enabled", @"hideOverlayDarkBackground_enabled", @"disableAmbientMode_enabled", @"noVideosInFullscreen_enabled", @"noRelatedWatchNexts_enabled",
+                                  @"hideBuySuperThanks_enabled", @"hideSubcriptions_enabled", @"disableResumeToShorts_enabled", @"shortsQualityPicker_enabled",
+                                  @"redSubscribeButton_enabled", @"hideButtonContainers_enabled", @"hideConnectButton_enabled", @"hideShareButton_enabled", @"hideRemixButton_enabled", @"hideThanksButton_enabled", @"hideDownloadButton_enabled", @"hideClipButton_enabled", @"hideSaveToPlaylistButton_enabled", @"hideReportButton_enabled", @"hidePreviewCommentSection_enabled", @"hideCommentSection_enabled",
+                                  @"disableAccountSection_enabled", @"disableAutoplaySection_enabled", @"disableTryNewFeaturesSection_enabled", @"disableVideoQualityPreferencesSection_enabled", @"disableNotificationsSection_enabled", @"disableManageAllHistorySection_enabled", @"disableYourDataInYouTubeSection_enabled", @"disablePrivacySection_enabled", @"disableLiveChatSection_enabled", @"hidePremiumPromos_enabled",
+                                  @"hideHomeTab_enabled", @"lowContrastMode_enabled", @"fixLowContrastMode_enabled", @"disableModernButtons_enabled", @"disableRoundedHints_enabled", @"disableModernFlags_enabled", @"ytNoModernUI_enabled", @"enableVersionSpoofer_enabled",
+                                  @"uYouAdBlockingWorkaroundLite_enabled", @"uYouAdBlockingWorkaround_enabled", @"uYouAdBlockingWorkaround_enabled", @"centerYouTubeLogo_enabled", @"hideYouTubeLogo_enabled", @"ytStartupAnimation_enabled", @"disableHints_enabled", @"stickNavigationBar_enabled", @"hideSponsorBlockButton_enabled", @"hideChipBar_enabled", @"hidePlayNextInQueue_enabled", @"hideCommunityPosts_enabled", @"hideChannelHeaderLinks_enabled", @"iPhoneLayout_enabled", @"bigYTMiniPlayer_enabled", @"reExplore_enabled", @"autoHideHomeBar_enabled", @"hideSubscriptionsNotificationBadge_enabled", @"fixCasting_enabled", @"flex_enabled",
+                                  @"hideCastButton", @"relatedVideosAtTheEndOfYTVideos", @"disableAgeRestriction", @"removeYouTubeAds", @"noSuggestedVideoAtEnd", @"showedWelcomeVC", @"shortsProgressBar", @"hideShortsCells", @"removeShortsCell",
+                                  @"EnableVP9", @"AllVP9"];
+            for (NSString *key in copyKeys) {
+                if ([userDefaults objectForKey:key]) {
+                    NSString *value = [userDefaults objectForKey:key];
+                    [settingsString appendFormat:@"%@: %@\n", key, value];
+                }
+            }
+            [[UIPasteboard generalPasteboard] setString:settingsString];
+            // Show a confirmation message or perform some other action here
+            return YES;
+        }
+    ];
+    [sectionItems addObject:copySettings];
+*/
+
+    YTSettingsSectionItem *pasteSettings = [%c(YTSettingsSectionItem)
+        itemWithTitle:LOC(@"PASTE_SETTINGS")
+        titleDescription:LOC(@"PASTE_SETTINGS_DESC")
+        accessibilityIdentifier:nil
+        detailTextBlock:nil
+        selectBlock:^BOOL (YTSettingsCell *cell, NSUInteger arg1) {
+            NSString *settingsString = [[UIPasteboard generalPasteboard] string];
+            if (settingsString.length > 0) {
+                UIAlertController *confirmationAlert = [UIAlertController alertControllerWithTitle:LOC(@"Are you sure you want to paste the settings?") message:nil preferredStyle:UIAlertControllerStyleAlert];
+                UIAlertAction *confirmAction = [UIAlertAction actionWithTitle:LOC(@"Confirm") style:UIAlertActionStyleDefault handler:^(UIAlertAction * _Nonnull action) {
+                    NSArray *lines = [settingsString componentsSeparatedByString:@"\n"];
+                    for (NSString *line in lines) {
+                        NSArray *components = [line componentsSeparatedByString:@": "];
+                        if (components.count == 2) {
+                            NSString *key = components[0];
+                            NSString *value = components[1];
+                            [[NSUserDefaults standardUserDefaults] setObject:value forKey:key];
+                        }
+                    }
+                    [settingsViewController reloadData];
+                    SHOW_RELAUNCH_YT_SNACKBAR;
+                }];
+                UIAlertAction *cancelAction = [UIAlertAction actionWithTitle:LOC(@"Cancel") style:UIAlertActionStyleCancel handler:nil];
+
+                [confirmationAlert addAction:confirmAction];
+                [confirmationAlert addAction:cancelAction];
+
+                [settingsViewController presentViewController:confirmationAlert animated:YES completion:nil];
+            }
+            return YES;
+        }
+    ];
+    [sectionItems addObject:pasteSettings];
 
     YTSettingsSectionItem *exitYT = [%c(YTSettingsSectionItem)
         itemWithTitle:LOC(@"QUIT_YOUTUBE")
@@ -148,6 +259,47 @@ extern NSBundle *uYouPlusBundle();
         }
     ];
     [sectionItems addObject:exitYT];
+
+    SECTION_HEADER(LOC(@"📺 App Personalization"));
+    # pragma mark - uYouEnhanced Essential Menu
+    YTSettingsSectionItem *customAppMenu = [%c(YTSettingsSectionItem)
+        itemWithTitle:LOC(@"UYOUENHANCED_ESSENTIAL_MENU")
+        titleDescription:LOC(@"This menu includes App Color Customization & Clearing the Cache 🗑️")
+        accessibilityIdentifier:nil
+        detailTextBlock:nil
+        selectBlock:^BOOL (YTSettingsCell *cell, NSUInteger arg1) {
+            RootOptionsController *rootOptionsController = [[RootOptionsController alloc] init];
+            [settingsViewController.navigationController pushViewController:rootOptionsController animated:YES];
+            return YES;
+        }
+    ];
+    [sectionItems addObject:customAppMenu];
+
+    YTSettingsSectionItem *appIcon = [%c(YTSettingsSectionItem)
+        itemWithTitle:LOC(@"CHANGE_APP_ICON")
+        titleDescription:nil
+        accessibilityIdentifier:nil
+        detailTextBlock:nil
+        selectBlock:^BOOL (YTSettingsCell *cell, NSUInteger arg1) {
+            AppIconOptionsController *appIconController = [[AppIconOptionsController alloc] init];
+            [settingsViewController.navigationController pushViewController:appIconController animated:YES];
+            return YES;
+        }
+    ];
+    [sectionItems addObject:appIcon];
+
+    YTSettingsSectionItem *clearNotifications = [%c(YTSettingsSectionItem)
+        itemWithTitle:LOC(@"CLEAR_NOTIFICATIONS")
+        titleDescription:LOC(@"CLEAR_NOTIFICATIONS_DESC")
+        accessibilityIdentifier:nil
+        detailTextBlock:nil
+        selectBlock:^BOOL (YTSettingsCell *cell, NSUInteger arg1) {
+            [[UIApplication sharedApplication] cancelAllLocalNotifications];
+            [[UIApplication sharedApplication] setApplicationIconBadgeNumber:0];
+            return YES;
+        }
+    ];
+    [sectionItems addObject:clearNotifications];
 
     # pragma mark - App theme
     SECTION_HEADER(LOC(@"THEME_OPTIONS"));
@@ -199,8 +351,8 @@ extern NSBundle *uYouPlusBundle();
                     }
                 ],
                 [YTSettingsSectionItemClass
-                    checkmarkItemWithTitle:LOC(@"Custom Dark Theme")
-                    titleDescription:LOC(@"In order to use Custom Themes that is in the uYouPlus Button, you will need to select this to be able to use custom colors.")
+                    checkmarkItemWithTitle:LOC(@"CUSTOM_DARK_THEME")
+                    titleDescription:LOC(@"In order to use Custom Themes, go to uYouEnhanced Essential Menu, you will need to press Custom Tint Color and than change the colors.")
                     selectBlock:^BOOL (YTSettingsCell *cell, NSUInteger arg1) {
                         [[NSUserDefaults standardUserDefaults] setInteger:3 forKey:@"appTheme"];
                         [settingsViewController reloadData];
@@ -236,41 +388,81 @@ extern NSBundle *uYouPlusBundle();
     # pragma mark - Video player options
     SECTION_HEADER(LOC(@"VIDEO_PLAYER_OPTIONS"));
 
-    SWITCH_ITEM2(LOC(@"Enable Portrait Fullscreen"), LOC(@"Enables Portrait Fullscreen on the YouTube App. App restart is required. (only for iPhone)"), @"portraitFullscreen_enabled");
+    SWITCH_ITEM3(
+        LOC(@"ENABLE_PORTRAIT_FULLSCREEN"), 
+        LOC(@"ENABLE_PORTRAIT_FULLSCREEN_DESC"), 
+        @"portraitFullscreen_enabled",
+        ({
+            if (UI_USER_INTERFACE_IDIOM() == UIUserInterfaceIdiomPhone) {
+                [[NSUserDefaults standardUserDefaults] setBool:enable forKey:@"portraitFullscreen_enabled"];
+                SHOW_RELAUNCH_YT_SNACKBAR;
+                return YES;
+            } else {
+                UIAlertController *alert = [UIAlertController alertControllerWithTitle:@"Incompatibile" message:@"This Option isn't compatible on an iPad." preferredStyle:UIAlertControllerStyleAlert];
+                UIAlertAction *okAction = [UIAlertAction actionWithTitle:@"OK" style:UIAlertActionStyleDefault handler:nil];
+                [alert addAction:okAction];
+                [settingsViewController presentViewController:alert animated:YES completion:nil];
+                return NO;
+            }
+        });
+    );
     SWITCH_ITEM2(LOC(@"SLIDE_TO_SEEK"), LOC(@"SLIDE_TO_SEEK_DESC"), @"slideToSeek_enabled");
-    SWITCH_ITEM2(LOC(@"Enable Tap To Seek"), LOC(@"Jump to anywhere in a video by single-tapping the seek bar"), @"YTTapToSeek_enabled");
+    SWITCH_ITEM2(LOC(@"ENABLE_TAP_TO_SEEK"), LOC(@"ENABLE_TAP_TO_SEEK_DESC"), @"YTTapToSeek_enabled");
     SWITCH_ITEM(LOC(@"DISABLE_DOUBLE_TAP_TO_SEEK"), LOC(@"DISABLE_DOUBLE_TAP_TO_SEEK_DESC"), @"doubleTapToSeek_disabled");
-//  SWITCH_ITEM2(LOC(@"SNAP_TO_CHAPTER"), LOC(@"SNAP_TO_CHAPTER_DESC"), @"snapToChapter_enabled");
+    SWITCH_ITEM(LOC(@"SNAP_TO_CHAPTER"), LOC(@"SNAP_TO_CHAPTER_DESC"), @"snapToChapter_enabled");
     SWITCH_ITEM2(LOC(@"PINCH_TO_ZOOM"), LOC(@"PINCH_TO_ZOOM_DESC"), @"pinchToZoom_enabled");
     SWITCH_ITEM(LOC(@"YT_MINIPLAYER"), LOC(@"YT_MINIPLAYER_DESC"), @"ytMiniPlayer_enabled");
     SWITCH_ITEM2(LOC(@"STOCK_VOLUME_HUD"), LOC(@"STOCK_VOLUME_HUD_DESC"), @"stockVolumeHUD_enabled");
-    SWITCH_ITEM2(LOC(@"Disable pull-to-fullscreen gesture"), LOC(@"Disable the drag gesture to enter vertical fullscreen. Only applies to landscape videos."), @"disablePullToFull_enabled");
+    SWITCH_ITEM2(LOC(@"DISABLE_PULL_TO_FULLSCREEN_GESTURE"), LOC(@"ENABLE_PORTRAIT_FULLSCREEN_DESC"), @"disablePullToFull_enabled");
+    SWITCH_ITEM(LOC(@"DISABLE_DOUBLE_TAP_TO_SKIP_CHAPTER"), LOC(@"DISABLE_DOUBLE_TAP_TO_SKIP_CHAPTER_DESC"), @"disableChapterSkip_enabled");
+    SWITCH_ITEM(LOC(@"ALWAYS_USE_REMAINING_TIME"), LOC(@"ALWAYS_USE_REMAINING_TIME_DESC"), @"alwaysShowRemainingTime_enabled");
+    SWITCH_ITEM(LOC(@"DISABLE_TOGGLE_TIME_REMAINING"), LOC(@"DISABLE_TOGGLE_TIME_REMAINING_DESC"), @"disableRemainingTime_enabled");
 
     # pragma mark - Video controls overlay options
-    SECTION_HEADER(LOC(@"VIDEO_PLAYER_OPTIONS"));
+    SECTION_HEADER(LOC(@"VIDEO_CONTROLS_OVERLAY_OPTIONS"));
 
-    SWITCH_ITEM(LOC(@"Enable Share Button"), LOC(@"Enable the Share Button in video controls overlay."), @"enableShareButton_enabled");
-    SWITCH_ITEM(LOC(@"Enable 'Save To Playlist' Button"), LOC(@"Enable the 'Save To Playlist' Button in video controls overlay."), @"enableSaveToButton_enabled");
+    SWITCH_ITEM(LOC(@"ENABLE_SHARE_BUTTON"), LOC(@"ENABLE_SHARE_BUTTON_DESC"), @"enableShareButton_enabled");
+    SWITCH_ITEM(LOC(@"ENABLE_SAVE_TO_PLAYLIST_BUTTON"), LOC(@"ENABLE_SAVE_TO_PLAYLIST_BUTTON_DESC"), @"enableSaveToButton_enabled");
     SWITCH_ITEM(LOC(@"HIDE_YTMUSIC_BUTTON"), LOC(@"HIDE_YTMUSIC_BUTTON_DESC"), @"hideYTMusicButton_enabled");
     SWITCH_ITEM(LOC(@"HIDE_AUTOPLAY_SWITCH"), LOC(@"HIDE_AUTOPLAY_SWITCH_DESC"), @"hideAutoplaySwitch_enabled");
     SWITCH_ITEM(LOC(@"HIDE_SUBTITLES_BUTTON"), LOC(@"HIDE_SUBTITLES_BUTTON_DESC"), @"hideCC_enabled");
-    SWITCH_ITEM(LOC(@"Hide Collapse (Arrow) Button"), LOC(@"Hides and Disables the Arrow Button in the Top Left of the Video Player."), @"disableCollapseButton_enabled");
-    SWITCH_ITEM(LOC(@"Hide Fullscreen Button"), LOC(@"Hides and Disables the Fullscreen Button in the Video Player."), @"disableFullscreenButton_enabled");
+    SWITCH_ITEM(LOC(@"HIDE_VIDEO_TITLE_IN_FULLSCREEN"), LOC(@"HIDE_VIDEO_TITLE_IN_FULLSCREEN_DESC"), @"hideVideoTitle_enabled");
+    SWITCH_ITEM(LOC(@"HIDE_COLLAPSE_BUTTON"), LOC(@"HIDE_COLLAPSE_BUTTON_DESC"), @"disableCollapseButton_enabled");
+    SWITCH_ITEM(LOC(@"HIDE_FULLSCREEN_BUTTON"), LOC(@"HIDE_FULLSCREEN_BUTTON_DESC"), @"disableFullscreenButton_enabled");
     SWITCH_ITEM(LOC(@"HIDE_HUD_MESSAGES"), LOC(@"HIDE_HUD_MESSAGES_DESC"), @"hideHUD_enabled");
     SWITCH_ITEM(LOC(@"HIDE_PAID_PROMOTION_CARDS"), LOC(@"HIDE_PAID_PROMOTION_CARDS_DESC"), @"hidePaidPromotionCard_enabled");
     SWITCH_ITEM2(LOC(@"HIDE_CHANNEL_WATERMARK"), LOC(@"HIDE_CHANNEL_WATERMARK_DESC"), @"hideChannelWatermark_enabled");
-    SWITCH_ITEM2(LOC(@"Hide Shadow Overlay Buttons"), LOC(@"Hide the Shadow Overlay on the Play/Pause, Previous, Next, Forward & Rewind Buttons."), @"hideVideoPlayerShadowOverlayButtons_enabled");
-    // SWITCH_ITEM(LOC(@"HIDE_PREVIOUS_AND_NEXT_BUTTON"), LOC(@"HIDE_PREVIOUS_AND_NEXT_BUTTON_DESC"), @"hidePreviousAndNextButton_enabled");
+    SWITCH_ITEM2(LOC(@"HIDE_SHADOW_OVERLAY_BUTTONS"), LOC(@"HIDE_SHADOW_OVERLAY_BUTTONS_DESC"), @"hideVideoPlayerShadowOverlayButtons_enabled");
+    SWITCH_ITEM2(LOC(@"HIDE_PREVIOUS_AND_NEXT_BUTTON"), LOC(@"HIDE_PREVIOUS_AND_NEXT_BUTTON_DESC"), @"hidePreviousAndNextButton_enabled");
     SWITCH_ITEM2(LOC(@"RED_PROGRESS_BAR"), LOC(@"RED_PROGRESS_BAR_DESC"), @"redProgressBar_enabled");
     SWITCH_ITEM(LOC(@"HIDE_HOVER_CARD"), LOC(@"HIDE_HOVER_CARD_DESC"), @"hideHoverCards_enabled");
     SWITCH_ITEM2(LOC(@"HIDE_RIGHT_PANEL"), LOC(@"HIDE_RIGHT_PANEL_DESC"), @"hideRightPanel_enabled");
-    SWITCH_ITEM2(LOC(@"Hide Fullscreen Action Buttons"), LOC(@"Hides the buttons at the bottom of the screen when in landscape (only for iPhone)"), @"hideFullscreenActions_enabled");
-    SWITCH_ITEM2(LOC(@"Hide Suggested Video"), LOC(@"Remove the suggested video popup when finishing a video. Note that this will prevent autoplay from working."), @"noSuggestedVideo_enabled");
-    SWITCH_ITEM2(LOC(@"Hide Heatwaves"), LOC(@"Should hide the Heatwaves in the video player. App restart is required."), @"hideHeatwaves_enabled");
-    SWITCH_ITEM2(LOC(@"Hide Double Tap to Seek Overlay"), LOC(@"This hides the animated double tap to seek overlay in the video player. App restart is required."), @"hideDoubleTapToSeekOverlay_enabled");
-    SWITCH_ITEM2(LOC(@"Hide Dark Overlay Background"), LOC(@"Hide video player's dark overlay background. App restart is required."), @"hideOverlayDarkBackground_enabled");
-    SWITCH_ITEM2(LOC(@"Disable Ambient Mode in Fullscreen"), LOC(@"When Enabled, this will Disable the functionality of Ambient Mode from being used in the Video Player when in Fullscreen. App restart is required."), @"disableAmbientMode_enabled");
-    SWITCH_ITEM2(LOC(@"Hide Suggested Videos in Fullscreen"), LOC(@"Hide video player's suggested videos whenever in fullscreen. App restart is required."), @"noVideosInFullscreen_enabled");
+    SWITCH_ITEM3(
+        LOC(@"HIDE_FULLSCREEN_ACTION_BUTTONS"), 
+        LOC(@"HIDE_FULLSCREEN_ACTION_BUTTONS_DESC"), 
+        @"hideFullscreenActions_enabled",
+        ({
+            if (UI_USER_INTERFACE_IDIOM() == UIUserInterfaceIdiomPhone) {
+                [[NSUserDefaults standardUserDefaults] setBool:enable forKey:@"hideFullscreenActions_enabled"];
+                SHOW_RELAUNCH_YT_SNACKBAR;
+                return YES;
+            } else {
+                UIAlertController *alert = [UIAlertController alertControllerWithTitle:@"Incompatibile" message:@"This Option isn't compatible on an iPad." preferredStyle:UIAlertControllerStyleAlert];
+                UIAlertAction *okAction = [UIAlertAction actionWithTitle:@"OK" style:UIAlertActionStyleDefault handler:nil];
+                [alert addAction:okAction];
+                [settingsViewController presentViewController:alert animated:YES completion:nil];
+                return NO;
+            }
+        });
+    );
+    SWITCH_ITEM2(LOC(@"HIDE_SUGGESTED_VIDEO"), LOC(@"HIDE_SUGGESTED_VIDEO_DESC"), @"noSuggestedVideo_enabled");
+    SWITCH_ITEM2(LOC(@"HIDE_HEATWAVES_BAR"), LOC(@"HIDE_HEATWAVES_BAR_DESC"), @"hideHeatwaves_enabled");
+    SWITCH_ITEM2(LOC(@"HIDE_DOUBLE_TAP_TO_SEEK_OVERLAY"), LOC(@"HIDE_DOUBLE_TAP_TO_SEEK_OVERLAY_DESC"), @"hideDoubleTapToSeekOverlay_enabled");
+    SWITCH_ITEM2(LOC(@"HIDE_DARK_OVERLAY_BACKGROUND"), LOC(@"HIDE_DARK_OVERLAY_BACKGROUND_DESC"), @"hideOverlayDarkBackground_enabled");
+    SWITCH_ITEM2(LOC(@"HIDE_AMBIENT_MODE_IN_FULLSCREEN"), LOC(@"HIDE_AMBIENT_MODE_IN_FULLSCREEN_DESC"), @"disableAmbientMode_enabled");
+    SWITCH_ITEM2(LOC(@"HIDE_SUGGESTED_VIDEOS_IN_FULLSCREEN"), LOC(@"HIDE_SUGGESTED_VIDEOS_IN_FULLSCREEN_DESC"), @"noVideosInFullscreen_enabled");
+    SWITCH_ITEM2(LOC(@"HIDE_ALL_VIDEOS_UNDER_PLAYER"), LOC(@"HIDE_ALL_VIDEOS_UNDER_PLAYER_DESC"), @"noRelatedWatchNexts_enabled");
+
 
    # pragma mark - Shorts controls overlay options
     SECTION_HEADER(LOC(@"SHORTS_CONTROLS_OVERLAY_OPTIONS"));
@@ -278,121 +470,146 @@ extern NSBundle *uYouPlusBundle();
     SWITCH_ITEM(LOC(@"HIDE_SUPER_THANKS"), LOC(@"HIDE_SUPER_THANKS_DESC"), @"hideBuySuperThanks_enabled");
     SWITCH_ITEM(LOC(@"HIDE_SUBCRIPTIONS"), LOC(@"HIDE_SUBCRIPTIONS_DESC"), @"hideSubcriptions_enabled");
     // SWITCH_ITEM(LOC(@"DISABLE_RESUME_TO_SHORTS"), LOC(@"DISABLE_RESUME_TO_SHORTS_DESC"), @"disableResumeToShorts_enabled");
+    SWITCH_ITEM2(LOC(@"SHORTS_QUALITY_PICKER"), LOC(@"SHORTS_QUALITY_PICKER_DESC"), @"shortsQualityPicker_enabled");
 
     # pragma mark - Video player button options
-    SECTION_HEADER(LOC(@"Video Player Button Options"));
+    SECTION_HEADER(LOC(@"VIDEO_PLAYER_BUTTON_OPTIONS"));
 
 // (the options "Red Subscribe Button" and "Hide Button Containers under player" are currently not working)
 //
-//  SWITCH_ITEM(LOC(@"Red Subscribe Button"), LOC(@"Replaces the Subscribe Button color from being White to the color Red."), @"redSubscribeButton_enabled");
-//  SWITCH_ITEM2(LOC(@"Hide Button Containers under player"), LOC(@"Hides Button Containers under the video player."), @"hideButtonContainers_enabled");
-    SWITCH_ITEM(LOC(@"Hide the Connect Button under player"), LOC(@"Hides the Connect Button under the video player."), @"hideConnectButton_enabled");
-    SWITCH_ITEM(LOC(@"Hide the Share Button under player"), LOC(@"Hides the Share Button under the video player."), @"hideShareButton_enabled");
+//  SWITCH_ITEM(LOC(@"RED_SUBSCRIBE_BUTTON"), LOC(@"RED_SUBSCRIBE_BUTTON_DESC"), @"redSubscribeButton_enabled");
+//  SWITCH_ITEM2(LOC(@"HIDE_BUTTON_CONTAINERS_UNDER_PLAYER"), LOC(@"HIDE_BUTTON_CONTAINERS_UNDER_PLAYER_DESC"), @"hideButtonContainers_enabled");
+    SWITCH_ITEM(LOC(@"HIDE_CONNECT_BUTTON"), LOC(@"HIDE_CONNECT_BUTTON_DESC"), @"hideConnectButton_enabled");
+    SWITCH_ITEM(LOC(@"HIDE_SHARE_BUTTON"), LOC(@"HIDE_SHARE_BUTTON_DESC"), @"hideShareButton_enabled");
     SWITCH_ITEM(LOC(@"HIDE_REMIX_BUTTON"), LOC(@"HIDE_REMIX_BUTTON_DESC"), @"hideRemixButton_enabled");
-    SWITCH_ITEM(LOC(@"Hide the Thanks Button under player"), LOC(@"Hides the Thanks Button under the video player."), @"hideThanksButton_enabled");
+    SWITCH_ITEM(LOC(@"HIDE_THANKS_BUTTON"), LOC(@"HIDE_THANKS_BUTTON_DESC"), @"hideThanksButton_enabled");
     SWITCH_ITEM(LOC(@"HIDE_DOWNLOAD_BUTTON"), LOC(@"HIDE_DOWNLOAD_BUTTON_DESC"), @"hideDownloadButton_enabled");
     SWITCH_ITEM(LOC(@"HIDE_CLIP_BUTTON"), LOC(@"HIDE_CLIP_BUTTON_DESC"), @"hideClipButton_enabled");
-    SWITCH_ITEM(LOC(@"Hide the Save to playlist Button under player"), LOC(@"Hides the Save to playlist Button under the video player."), @"hideSaveToPlaylistButton_enabled");
-    SWITCH_ITEM(LOC(@"Hide the Report Button under player"), LOC(@"Hides the Report Button under the video player."), @"hideReportButton_enabled");
-    SWITCH_ITEM(LOC(@"Hide Comment Section previews"), LOC(@"Makes the comment section blank with no previews under the player."), @"hidePreviewCommentSection_enabled");
-    SWITCH_ITEM(LOC(@"Hide the comment section under player"), LOC(@"Hides the Comment Section below the player."), @"hideCommentSection_enabled");
+    SWITCH_ITEM(LOC(@"HIDE_SAVE_BUTTON"), LOC(@"HIDE_SAVE_BUTTON_DESC"), @"hideSaveToPlaylistButton_enabled");
+    SWITCH_ITEM(LOC(@"HIDE_REPORT_BUTTON"), LOC(@"HIDE_REPORT_BUTTON_DESC"), @"hideReportButton_enabled");
+    SWITCH_ITEM(LOC(@"HIDE_COMMENT_PREVIEWS_UNDER_PLAYER"), LOC(@"HIDE_COMMENT_PREVIEWS_UNDER_PLAYER_DESC"), @"hidePreviewCommentSection_enabled");
+    SWITCH_ITEM(LOC(@"HIDE_COMMENT_SECTION_BUTTON"), LOC(@"HIDE_COMMENT_SECTION_BUTTON_DESC"), @"hideCommentSection_enabled");
 
 # pragma mark - App settings overlay options
     SECTION_HEADER(LOC(@"App Settings Overlay Options"));
 
-    SWITCH_ITEM2(LOC(@"Hide `Account` Section"), LOC(@"App restart is required."), @"disableAccountSection_enabled");
-//  SWITCH_ITEM2(LOC(@"Hide `DontEatMyContent` Section"), LOC(@"App restart is required."), @"disableDontEatMyContentSection_enabled");
-//  SWITCH_ITEM2(LOC(@"Hide `YouTube Return Dislike` Section"), LOC(@"App restart is required."), @"disableReturnYouTubeDislikeSection_enabled");
-//  SWITCH_ITEM2(LOC(@"Hide `YouPiP` Section"), LOC(@"App restart is required."), @"disableYouPiPSection_enabled");
-    SWITCH_ITEM2(LOC(@"Hide `Autoplay` Section"), LOC(@"App restart is required."), @"disableAutoplaySection_enabled");
-    SWITCH_ITEM2(LOC(@"Hide `Try New Features` Section"), LOC(@"App restart is required."), @"disableTryNewFeaturesSection_enabled");
-    SWITCH_ITEM2(LOC(@"Hide `Video quality preferences` Section"), LOC(@"App restart is required."), @"disableVideoQualityPreferencesSection_enabled");
-    SWITCH_ITEM2(LOC(@"Hide `Notifications` Section"), LOC(@"App restart is required."), @"disableNotificationsSection_enabled");
-    SWITCH_ITEM2(LOC(@"Hide `Manage all history` Section"), LOC(@"App restart is required."), @"disableManageAllHistorySection_enabled");
-    SWITCH_ITEM2(LOC(@"Hide `Your data in YouTube` Section"), LOC(@"App restart is required."), @"disableYourDataInYouTubeSection_enabled");
-    SWITCH_ITEM2(LOC(@"Hide `Privacy` Section"), LOC(@"App restart is required."), @"disablePrivacySection_enabled");
-    SWITCH_ITEM2(LOC(@"Hide `Live Chat` Section"), LOC(@"App restart is required."), @"disableLiveChatSection_enabled");
+    SWITCH_ITEM2(LOC(@"HIDE_ACCOUNT_SECTION"), LOC(@"RESTART_REQUIRED"), @"disableAccountSection_enabled");
+//  SWITCH_ITEM2(LOC(@"Hide `DontEatMyContent` Section"), LOC(@"RESTART_REQUIRED"), @"disableDontEatMyContentSection_enabled");
+//  SWITCH_ITEM2(LOC(@"Hide `YouTube Return Dislike` Section"), LOC(@"RESTART_REQUIRED"), @"disableReturnYouTubeDislikeSection_enabled");
+//  SWITCH_ITEM2(LOC(@"Hide `YouPiP` Section"), LOC(@"RESTART_REQUIRED"), @"disableYouPiPSection_enabled");
+    SWITCH_ITEM2(LOC(@"HIDE_AUTOPLAY_SECTION"), LOC(@"RESTART_REQUIRED"), @"disableAutoplaySection_enabled");
+    SWITCH_ITEM2(LOC(@"HIDE_TRY_NEW_FEATURES_SECTION"), LOC(@"RESTART_REQUIRED"), @"disableTryNewFeaturesSection_enabled");
+    SWITCH_ITEM2(LOC(@"HIDE_VIDEO_QUALITY_PREFERENCES_SECTION"), LOC(@"RESTART_REQUIRED"), @"disableVideoQualityPreferencesSection_enabled");
+    SWITCH_ITEM2(LOC(@"HIDE_NOTIFICATIONS_SECTION"), LOC(@"RESTART_REQUIRED"), @"disableNotificationsSection_enabled");
+    SWITCH_ITEM2(LOC(@"HIDE_MANAGE_ALL_HISTORY_SECTION"), LOC(@"RESTART_REQUIRED"), @"disableManageAllHistorySection_enabled");
+    SWITCH_ITEM2(LOC(@"HIDE_YOUR_DATA_IN_YOUTUBE_SECTION"), LOC(@"RESTART_REQUIRED"), @"disableYourDataInYouTubeSection_enabled");
+    SWITCH_ITEM2(LOC(@"HIDE_PRIVACY_SECTION"), LOC(@"RESTART_REQUIRED"), @"disablePrivacySection_enabled");
+    SWITCH_ITEM2(LOC(@"HIDE_LIVE_CHAT_SECTION"), LOC(@"RESTART_REQUIRED"), @"disableLiveChatSection_enabled");
+    SWITCH_ITEM2(LOC(@"HIDE_GET_YOUTUBE_PREMIUM_SECTION"), LOC(@"RESTART_REQUIRED"), @"hidePremiumPromos_enabled");
 
     # pragma mark - UI interface options
-    SECTION_HEADER(LOC(@"UI Interface Options"));
+    SECTION_HEADER(LOC(@"UI_INTERFACE_OPTIONS"));
 
-YTSettingsSectionItem *lowContrastMode = [YTSettingsSectionItemClass
-    switchItemWithTitle:LOC(@"Low Contrast Mode")
-    titleDescription:LOC(@"This will lower the contrast of texts and buttons, similar to the old YouTube Interface. App restart is required.")
-    accessibilityIdentifier:nil
-    switchOn:IS_ENABLED(@"lowContrastMode_enabled")
-    switchBlock:^BOOL (YTSettingsCell *cell, BOOL enabled) {
-        if (enabled) {
-            NSString *appVersion = [[[NSBundle mainBundle] infoDictionary] objectForKey:@"CFBundleShortVersionString"];
-            NSComparisonResult result1 = [appVersion compare:@"17.33.2" options:NSNumericSearch];
-            NSComparisonResult result2 = [appVersion compare:@"17.38.10" options:NSNumericSearch];
-            if (result1 == NSOrderedAscending || result2 == NSOrderedDescending) {
+    SWITCH_ITEM2(LOC(@"HIDE_HOME_TAB"), LOC(@""), @"hideHomeTab_enabled");
+    SWITCH_ITEM3(
+        LOC(@"LOW_CONTRAST_MODE"),
+        LOC(@"LOW_CONTRAST_MODE_DESC"),
+        @"lowContrastMode_enabled",
+        ({
+            if (enable) {
+                Class YTVersionUtilsClass = %c(YTVersionUtils);
+                NSString *appVersion = [YTVersionUtilsClass performSelector:@selector(appVersion)];
+                NSComparisonResult result1 = [appVersion compare:@"17.33.2" options:NSNumericSearch];
+                NSComparisonResult result2 = [appVersion compare:@"17.38.10" options:NSNumericSearch];
+                if (result1 == NSOrderedAscending) {
+                    UIAlertController *alert = [UIAlertController alertControllerWithTitle:@"Discontinued" message:[NSString stringWithFormat:@"You are using v%@ which is a discontinued version of YouTube that no longer works. Please use v17.33.2-17.38.10 in order to use LowContrastMode.", appVersion] preferredStyle:UIAlertControllerStyleAlert];
+                    UIAlertAction *okAction = [UIAlertAction actionWithTitle:@"OK" style:UIAlertActionStyleDefault handler:nil];
+                    [alert addAction:okAction];
+                    [settingsViewController presentViewController:alert animated:YES completion:nil];
+                    return NO;
+                } else if (result2 == NSOrderedDescending) {
+                    UIAlertController *alert = [UIAlertController alertControllerWithTitle:@"Incompatible" message:[NSString stringWithFormat:@"LowContrastMode is only available for app versions v17.33.2-v17.38.10. \nYou are currently using v%@. \nWorkaround: if you want to use this then I recommend enabling \"Fix LowContrastMode\" Option.", appVersion] preferredStyle:UIAlertControllerStyleAlert];
+                    UIAlertAction *okAction = [UIAlertAction actionWithTitle:@"OK" style:UIAlertActionStyleDefault handler:nil];
+                    [alert addAction:okAction];
+                    [settingsViewController presentViewController:alert animated:YES completion:nil];
+                    return NO;
+                }
+            }
+            [[NSUserDefaults standardUserDefaults] setBool:enable forKey:@"lowContrastMode_enabled"];
+            [settingsViewController reloadData];
+            SHOW_RELAUNCH_YT_SNACKBAR;
+            return YES;
+        });
+    );
+    YTSettingsSectionItem *lowContrastModeButton = [%c(YTSettingsSectionItem)
+        itemWithTitle:@"LOW_CONTRAST_MODE_SELECTOR"
+        accessibilityIdentifier:nil
+        detailTextBlock:^NSString *() {
+            switch (contrastMode()) {
+                case 1:
+                    return LOC(@"CUSTOM_COLOR");
+                case 0:
+                default:
+                    return LOC(@"DEFAULT");
+            }
+        }
+        selectBlock:^BOOL (YTSettingsCell *cell, NSUInteger arg1) {
+            if (contrastMode() == 0) {
+                // Get the current version (including spoofed versions)
+                Class YTVersionUtilsClass = %c(YTVersionUtils);
+                NSString *appVersion = [YTVersionUtilsClass performSelector:@selector(appVersion)];
+                // Alert the user that they need to enable the fix
                 UIAlertController *alert = [UIAlertController alertControllerWithTitle:@"Incompatibile" message:[NSString stringWithFormat:@"LowContrastMode is only available for app versions v17.33.2-v17.38.10. \nYou are currently using v%@. \n\nWorkaround: if you want to use this then I recommend enabling \"Fix LowContrastMode\" Option.", appVersion] preferredStyle:UIAlertControllerStyleAlert];
                 UIAlertAction *okAction = [UIAlertAction actionWithTitle:@"OK" style:UIAlertActionStyleDefault handler:nil];
                 [alert addAction:okAction];
                 [settingsViewController presentViewController:alert animated:YES completion:nil];
                 return NO;
+            } else {
+                NSArray <YTSettingsSectionItem *> *rows = @[
+                    [YTSettingsSectionItemClass checkmarkItemWithTitle:LOC(@"Default") titleDescription:nil selectBlock:^BOOL (YTSettingsCell *cell, NSUInteger arg1) {
+                        [[NSUserDefaults standardUserDefaults] setInteger:0 forKey:@"lcm"];
+                        [settingsViewController reloadData];
+                        return YES;
+                    }],
+                    [YTSettingsSectionItemClass checkmarkItemWithTitle:LOC(@"Custom Color") titleDescription:nil selectBlock:^BOOL (YTSettingsCell *cell, NSUInteger arg1) {
+                        [[NSUserDefaults standardUserDefaults] setInteger:1 forKey:@"lcm"];
+                        [settingsViewController reloadData];
+                        return YES;
+                    }]
+
+                ];
+                YTSettingsPickerViewController *picker = [[%c(YTSettingsPickerViewController) alloc] initWithNavTitle:LOC(@"Low Contrast Mode Selector") pickerSectionTitle:nil rows:rows selectedItemIndex:contrastMode() parentResponder:[self parentResponder]];
+                [settingsViewController pushViewController:picker];
+                return YES;
             }
         }
-        if (IS_ENABLED(@"fixLowContrastMode_enabled")) {
-            [[NSUserDefaults standardUserDefaults] setBool:YES forKey:@"lowContrastMode_enabled"];
-        }
-        [settingsViewController reloadData];
-        SHOW_RELAUNCH_YT_SNACKBAR;
-        return YES;
-    }
-    settingItemId:0
-];
-[sectionItems addObject:lowContrastMode];
-YTSettingsSectionItem *lowContrastModeButton = [%c(YTSettingsSectionItem)
-    itemWithTitle:@"Low Contrast Mode Selector"
-    accessibilityIdentifier:nil
-    detailTextBlock:^NSString *() {
-        switch (contrastMode()) {
-            case 1:
-                return LOC(@"Custom Color");
-            case 0:
-            default:
-                return LOC(@"Default");
-        }
-    }
-    selectBlock:^BOOL (YTSettingsCell *cell, NSUInteger arg1) {
-        if (contrastMode() == 0) {
-            NSString *appVersion = [[[NSBundle mainBundle] infoDictionary] objectForKey:@"CFBundleShortVersionString"];
-            UIAlertController *alert = [UIAlertController alertControllerWithTitle:@"Incompatibile" message:[NSString stringWithFormat:@"LowContrastMode is only available for app versions v17.33.2-v17.38.10. \nYou are currently using v%@. \n\nWorkaround: if you want to use this then I recommend enabling \"Fix LowContrastMode\" Option.", appVersion] preferredStyle:UIAlertControllerStyleAlert];
-            UIAlertAction *okAction = [UIAlertAction actionWithTitle:@"OK" style:UIAlertActionStyleDefault handler:nil];
-            [alert addAction:okAction];
-            [settingsViewController presentViewController:alert animated:YES completion:nil];
-            return NO;
-        } else {
-            NSArray <YTSettingsSectionItem *> *rows = @[
-                [YTSettingsSectionItemClass checkmarkItemWithTitle:LOC(@"Default") titleDescription:nil selectBlock:^BOOL (YTSettingsCell *cell, NSUInteger arg1) {
-                    [[NSUserDefaults standardUserDefaults] setInteger:0 forKey:@"lcm"];
-                    [settingsViewController reloadData];
-                    return YES;
-                }],
-                [YTSettingsSectionItemClass checkmarkItemWithTitle:LOC(@"Custom Color") titleDescription:nil selectBlock:^BOOL (YTSettingsCell *cell, NSUInteger arg1) {
-                    [[NSUserDefaults standardUserDefaults] setInteger:1 forKey:@"lcm"];
-                    [settingsViewController reloadData];
-                    return YES;
-                }]
-
-            ];
-            YTSettingsPickerViewController *picker = [[%c(YTSettingsPickerViewController) alloc] initWithNavTitle:LOC(@"Low Contrast Mode Selector") pickerSectionTitle:nil rows:rows selectedItemIndex:contrastMode() parentResponder:[self parentResponder]];
-            [settingsViewController pushViewController:picker];
+    ];
+    [sectionItems addObject:lowContrastModeButton];
+    SWITCH_ITEM2(LOC(@"FIX_LOWCONTRASTMODE"), LOC(@"FIX_LOWCONTRASTMODE_DESC"), @"fixLowContrastMode_enabled");
+    SWITCH_ITEM2(LOC(@"DISABLE_MODERN_BUTTONS"), LOC(@"DISABLE_MODERN_BUTTONS_DESC"), @"disableModernButtons_enabled");
+    SWITCH_ITEM2(LOC(@"DISABLE_ROUNDED_CORNERS_ON_HINTS"), LOC(@"DISABLE_ROUNDED_CORNERS_ON_HINTS_DESC"), @"disableRoundedHints_enabled");
+    SWITCH_ITEM2(LOC(@"DISABLE_MODERN_FLAGS"), LOC(@"DISABLE_MODERN_FLAGS_DESC"), @"disableModernFlags_enabled");
+    SWITCH_ITEM3(
+        LOC(@"YTNOMODERNUI"), 
+        LOC(@"YTNOMODERNUI_DESC"), 
+        @"ytNoModernUI_enabled",
+        ({
+            if (enable) {
+                UIAlertController *alert = [UIAlertController alertControllerWithTitle:@"Warning" message:@"This will force-enable other settings on restart. To disable them, you must turn this setting off." preferredStyle:UIAlertControllerStyleAlert];
+                UIAlertAction *okAction = [UIAlertAction actionWithTitle:@"OK" style:UIAlertActionStyleDefault handler:nil];
+                [alert addAction:okAction];
+                [settingsViewController presentViewController:alert animated:YES completion:nil];
+            }
+            [[NSUserDefaults standardUserDefaults] setBool:enable forKey:@"ytNoModernUI_enabled"];
+            [settingsViewController reloadData];
+            SHOW_RELAUNCH_YT_SNACKBAR;
             return YES;
-        }
-    }
-];
-[sectionItems addObject:lowContrastModeButton];
-    SWITCH_ITEM2(LOC(@"Fix LowContrastMode"), LOC(@"This will fix the LowContrastMode functionality by Spoofing to YouTube v17.38.10. App restart is required."), @"fixLowContrastMode_enabled");
-    SWITCH_ITEM2(LOC(@"Disable Modern Buttons"), LOC(@"This will remove the new Modern / Chip Buttons in the YouTube App. but not all of them. App restart is required."), @"disableModernButtons_enabled");
-    SWITCH_ITEM2(LOC(@"Disable Rounded Corners on Hints"), LOC(@"This will make the Hints in the App to not have Rounded Corners. App restart is required."), @"disableRoundedHints_enabled");
-    SWITCH_ITEM2(LOC(@"Disable Modern A/B Flags"), LOC(@"This will turn off any Modern Flag that was enabled by default. App restart is required."), @"disableModernFlags_enabled");
-    SWITCH_ITEM2(LOC(@"Enable Specific UI Related Options (YTNoModernUI)"), LOC(@"When Enabled, this will enable other options to give it a less-modern feeling. App restart is required."), @"ytNoModernUI_enabled");
-    SWITCH_ITEM2(LOC(@"Enable App Version Spoofer"), LOC(@"Enable this to use the Version Spoofer and select your perferred version below. App restart is required."), @"enableVersionSpoofer_enabled");
+        });
+    );
+    SWITCH_ITEM2(LOC(@"ENABLE_APP_VERSION_SPOOFER"), LOC(@"ENABLE_APP_VERSION_SPOOFER_DESC"), @"enableVersionSpoofer_enabled");
+    
     YTSettingsSectionItem *versionSpoofer = [%c(YTSettingsSectionItem)
-        itemWithTitle:@"Version spoofer picker"
+        itemWithTitle:LOC(@"VERSION_SPOOFER_SELECTOR")
         accessibilityIdentifier:nil
         detailTextBlock:^NSString *() {
             switch (appVersionSpoofer()) {
@@ -976,7 +1193,7 @@ YTSettingsSectionItem *lowContrastModeButton = [%c(YTSettingsSectionItem)
                     return YES;
                 }]
             ];
-            YTSettingsPickerViewController *picker = [[%c(YTSettingsPickerViewController) alloc] initWithNavTitle:LOC(@"Version Spoofer Picker") pickerSectionTitle:nil rows:rows selectedItemIndex:appVersionSpoofer() parentResponder:[self parentResponder]];
+            YTSettingsPickerViewController *picker = [[%c(YTSettingsPickerViewController) alloc] initWithNavTitle:LOC(@"VERSION_SPOOFER_SELECTOR") pickerSectionTitle:nil rows:rows selectedItemIndex:appVersionSpoofer() parentResponder:[self parentResponder]];
             [settingsViewController pushViewController:picker];
             return YES;
         }
@@ -986,23 +1203,47 @@ YTSettingsSectionItem *lowContrastModeButton = [%c(YTSettingsSectionItem)
     # pragma mark - Miscellaneous
     SECTION_HEADER(LOC(@"MISCELLANEOUS"));
 
-    SWITCH_ITEM(LOC(@"YouTube Premium Logo"), LOC(@"Toggle this to use the official YouTube Premium Logo. App restart is required."), @"premiumYouTubeLogo_enabled");
-//  SWITCH_ITEM(LOC(@"Center YouTube Logo"), LOC(@"Toggle this to move the official YouTube Logo to the Center. App restart is required."), @"centerYouTubeLogo_enabled");
-    SWITCH_ITEM(LOC(@"Hide YouTube Logo"), LOC(@"Toggle this to hide the YouTube Logo in the YouTube App."), @"hideYouTubeLogo_enabled");
+    SWITCH_ITEM2(LOC(@"ADBLOCK_WORKAROUND_LITE"), LOC(@"ADBLOCK_WORKAROUND_LITE_DESC"), @"uYouAdBlockingWorkaroundLite_enabled");
+    SWITCH_ITEM2(LOC(@"ADBLOCK_WORKAROUND"), LOC(@"ADBLOCK_WORKAROUND_DESC"), @"uYouAdBlockingWorkaround_enabled");
+    SWITCH_ITEM3(
+        LOC(@"FAKE_PREMIUM"),
+        LOC(@"FAKE_PREMIUM_DESC"),
+        @"youTabFakePremium_enabled",
+        ({
+            // Get the current version (including spoofed versions)
+            Class YTVersionUtilsClass = %c(YTVersionUtils);
+            NSString *appVersion = [YTVersionUtilsClass performSelector:@selector(appVersion)];
+            // Alert if the version is partially incompatible and the toggle is being turned on
+            NSComparisonResult result = [appVersion compare:@"18.35.4" options:NSNumericSearch];
+            if (enable && result == NSOrderedAscending) {
+                UIAlertController *alert = [UIAlertController alertControllerWithTitle:@"Warning" message:[NSString stringWithFormat:@"The \"You\" Tab doesn't exist in v%@, fake buttons will not be created.\nBut the \"Fake Premium Logo\" will still work.", appVersion] preferredStyle:UIAlertControllerStyleAlert];
+                UIAlertAction *okAction = [UIAlertAction actionWithTitle:@"OK" style:UIAlertActionStyleDefault handler:nil];
+                [alert addAction:okAction];
+                [settingsViewController presentViewController:alert animated:YES completion:nil];
+            }
+            // Refresh data and show the relaunch popup
+            [[NSUserDefaults standardUserDefaults] setBool:enable forKey:@"youTabFakePremium_enabled"];
+            [settingsViewController reloadData];
+            SHOW_RELAUNCH_YT_SNACKBAR;
+            return YES;
+        });
+    );
+//  SWITCH_ITEM(LOC(@"CENTER_YOUTUBE_LOGO"), LOC(@"CENTER_YOUTUBE_LOGO_DESC"), @"centerYouTubeLogo_enabled");
+    SWITCH_ITEM(LOC(@"HIDE_YOUTUBE_LOGO"), LOC(@"HIDE_YOUTUBE_LOGO_DESC"), @"hideYouTubeLogo_enabled");
     SWITCH_ITEM2(LOC(@"ENABLE_YT_STARTUP_ANIMATION"), LOC(@"ENABLE_YT_STARTUP_ANIMATION_DESC"), @"ytStartupAnimation_enabled");
     SWITCH_ITEM(LOC(@"DISABLE_HINTS"), LOC(@"DISABLE_HINTS_DESC"), @"disableHints_enabled");
-    SWITCH_ITEM(LOC(@"Stick Navigation Bar"), LOC(@"Enable to make the Navigation Bar stay on the App when scrolling."), @"stickNavigationBar_enabled");
+    SWITCH_ITEM(LOC(@"STICK_NAVIGATION_BAR"), LOC(@"STICK_NAVIGATION_BAR_DESC"), @"stickNavigationBar_enabled");
     SWITCH_ITEM2(LOC(@"HIDE_ISPONSORBLOCK"), nil, @"hideSponsorBlockButton_enabled");
-    SWITCH_ITEM2(LOC(@"Hides uYouPlus button"), nil, @"hideuYouPlusButton_enabled");
     SWITCH_ITEM(LOC(@"HIDE_CHIP_BAR"), LOC(@"HIDE_CHIP_BAR_DESC"), @"hideChipBar_enabled");
     SWITCH_ITEM(LOC(@"HIDE_PLAY_NEXT_IN_QUEUE"), LOC(@"HIDE_PLAY_NEXT_IN_QUEUE_DESC"), @"hidePlayNextInQueue_enabled");
-    SWITCH_ITEM2(LOC(@"Hide Community Posts"), LOC(@"Hides the Community Posts. App restart is required."), @"hideCommunityPosts_enabled");
-    SWITCH_ITEM2(LOC(@"Hide Header Links under channel profile"), LOC(@"Hides the Header Links under any channel profile."), @"hideChannelHeaderLinks_enabled");
-    SWITCH_ITEM2(LOC(@"Hide all videos under player"), LOC(@"Hides all videos below the player."), @"noRelatedWatchNexts_enabled");
+    SWITCH_ITEM2(LOC(@"HIDE_COMMUNITY_POSTS"), LOC(@"HIDE_COMMUNITY_POSTS_DESC"), @"hideCommunityPosts_enabled");
+    SWITCH_ITEM2(LOC(@"HIDE_HEADER_LINKS_UNDER_PROFILE"), LOC(@"HIDE_HEADER_LINKS_UNDER_PROFILE_DESC"), @"hideChannelHeaderLinks_enabled");
     SWITCH_ITEM2(LOC(@"IPHONE_LAYOUT"), LOC(@"IPHONE_LAYOUT_DESC"), @"iPhoneLayout_enabled");
     SWITCH_ITEM2(LOC(@"NEW_MINIPLAYER_STYLE"), LOC(@"NEW_MINIPLAYER_STYLE_DESC"), @"bigYTMiniPlayer_enabled");
     SWITCH_ITEM2(LOC(@"YT_RE_EXPLORE"), LOC(@"YT_RE_EXPLORE_DESC"), @"reExplore_enabled");
-    SWITCH_ITEM2(LOC(@"Hide Indicators"), LOC(@"Hides all Indicators that were in the App."), @"hideSubscriptionsNotificationBadge_enabled");
+    SWITCH_ITEM2(LOC(@"AUTO_HIDE_HOME_INDICATOR"), LOC(@"AUTO_HIDE_HOME_INDICATOR_DESC"), @"autoHideHomeBar_enabled");
+    SWITCH_ITEM2(LOC(@"HIDE_INDICATORS"), LOC(@"HIDE_INDICATORS_DESC"), @"hideSubscriptionsNotificationBadge_enabled");
+    SWITCH_ITEM2(LOC(@"FIX_CASTING"), LOC(@"FIX_CASTING_DESC"), @"fixCasting_enabled");
     SWITCH_ITEM(LOC(@"ENABLE_FLEX"), LOC(@"ENABLE_FLEX_DESC"), @"flex_enabled");
 
     if ([settingsViewController respondsToSelector:@selector(setSectionItems:forCategory:title:icon:titleDescription:headerHidden:)])

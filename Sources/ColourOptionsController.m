@@ -7,10 +7,10 @@
 @implementation ColourOptionsController
 
 - (void)loadView {
-	[super loadView];
+    [super loadView];
 
-    self.title = @"Theme Custom Color";
-    
+    self.title = @"Custom Theme Color";
+
     UIBarButtonItem *closeButton = [[UIBarButtonItem alloc] initWithTitle:@"Close" style:UIBarButtonItemStylePlain target:self action:@selector(close)];
     UIBarButtonItem *saveButton = [[UIBarButtonItem alloc] initWithTitle:@"Save" style:UIBarButtonItemStylePlain target:self action:@selector(save)];
     self.navigationItem.rightBarButtonItems = @[closeButton, saveButton];
@@ -24,10 +24,23 @@
     [unarchiver setRequiresSecureCoding:NO];
     UIColor *color = [unarchiver decodeObjectForKey:NSKeyedArchiveRootObjectKey];
     self.selectedColor = color;
+
+    if ([[UIDevice currentDevice] userInterfaceIdiom] == UIUserInterfaceIdiomPad) {
+        CGFloat scale = MIN(self.view.bounds.size.width / 768, self.view.bounds.size.height / 1024);
+        self.view.transform = CGAffineTransformMakeScale(scale, scale);
+    }
 }
 
-- (void)traitCollectionDidChange:(UITraitCollection *)previousTraitCollection {
-    [super traitCollectionDidChange:previousTraitCollection];
+- (void)viewWillTransitionToSize:(CGSize)size withTransitionCoordinator:(id<UIViewControllerTransitionCoordinator>)coordinator {
+    [super viewWillTransitionToSize:size withTransitionCoordinator:coordinator];
+    
+    if ([[UIDevice currentDevice] userInterfaceIdiom] == UIUserInterfaceIdiomPad && UIInterfaceOrientationIsLandscape(self.interfaceOrientation)) {
+        CGFloat scale = MIN(size.width / 768, size.height / 1024);
+        [coordinator animateAlongsideTransition:^(id<UIViewControllerTransitionCoordinatorContext> context) {
+            self.view.transform = CGAffineTransformMakeScale(scale, scale);
+        } completion:^(id<UIViewControllerTransitionCoordinatorContext> context) {
+        }];
+    }
 }
 
 @end

@@ -61,7 +61,7 @@
 "STOCK_VOLUME_HUD_DESC" = "";
 
 // Video controls overlay options
-"VIDEO_PLAYER_OPTIONS" = "📹 Video controls overlay options";
+"VIDEO_CONTROLS_OVERLAY_OPTIONS" = "📹 Video controls overlay options";
 
 "HIDE_AUTOPLAY_SWITCH" = "Κρύψτε τον διακόπτη της αυτόματης αναπαραγωγής";
 "HIDE_AUTOPLAY_SWITCH_DESC" = "Κρύψτε τον διακόπτη της αυτόματης αναπαραγωγής κατά την αναπαραγωγή βίντεο";
@@ -147,3 +147,6 @@
 
 "FIX_GOOGLE_SIGNIN" = "Διόρθωση σύνδεσης Google (μόνο για χρήστες του TrollStore)";
 "FIX_GOOGLE_SIGNIN_DESC" = "Ενεργοποιήστε αυτήν την επιλογή μόνο όταν δεν μπορείτε να συνδεθείτε με τον λογαριασμό σας Google και η εφαρμογή έχει εγκατασταθεί μέσω του TrollStore. Εάν μπορείτε να συνδεθείτε κανονικά, διατηρήστε την απενεργοποιημένη. Απαιτείται επανεκκίνηση της εφαρμογής.";
+
+"FAKE_YOUR_PREMIUM_BENEFITS" = "Your Premium benefits";
+"FAKE_DOWNLOADS" = "Downloads";

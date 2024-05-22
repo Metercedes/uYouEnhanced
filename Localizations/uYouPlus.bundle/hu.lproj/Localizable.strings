@@ -61,7 +61,7 @@
 "STOCK_VOLUME_HUD_DESC" = "";
 
 // Video controls overlay options
-"VIDEO_PLAYER_OPTIONS" = "📹 Video controls overlay options";
+"VIDEO_CONTROLS_OVERLAY_OPTIONS" = "📹 Video controls overlay options";
 
 "HIDE_AUTOPLAY_SWITCH" = "Az automatikus lejátszás kapcsoló elrejtése";
 "HIDE_AUTOPLAY_SWITCH_DESC" = "Az Automatikus lejátszás kapcsoló elrejtése a videovezérlők fedvényében.";
@@ -147,3 +147,6 @@
 
 "FIX_GOOGLE_SIGNIN" = "A Google bejelentkezés javítása (csak a TrollStore-felhasználók számára)";
 "FIX_GOOGLE_SIGNIN_DESC" = "Csak akkor kapcsolja be ezt az opciót, ha nem tud bejelentkezni Google-fiókjával, és az alkalmazást a TrollStore-on keresztül telepítették. Ha normálisan be tud jelentkezni, tartsa letiltva. Az alkalmazás újraindítása szükséges.";
+
+"FAKE_YOUR_PREMIUM_BENEFITS" = "Your Premium benefits";
+"FAKE_DOWNLOADS" = "Downloads";

@@ -61,7 +61,7 @@
 "STOCK_VOLUME_HUD_DESC" = "";
 
 // Video controls overlay options
-"VIDEO_PLAYER_OPTIONS" = "📹 Video Controls Overlay Options";
+"VIDEO_CONTROLS_OVERLAY_OPTIONS" = "📹 Video Controls Overlay Options";
 
 "HIDE_AUTOPLAY_SWITCH" = "Skrýt přepínač automatického přehrávání";
 "HIDE_AUTOPLAY_SWITCH_DESC" = "Skryje přepínač automatického přehrávání v překrytí ovládání videa.";
@@ -147,3 +147,6 @@
 
 "FIX_GOOGLE_SIGNIN" = "Opravit přihlášení přes Google (pouze pro uživatele TrollStore)";
 "FIX_GOOGLE_SIGNIN_DESC" = "Tuto možnost zapněte pouze v případě, že se nemůžete přihlásit pomocí svého účtu Google a aplikace byla nainstalována prostřednictvím TrollStore. Pokud se můžete normálně přihlásit, ponechte ji deaktivovanou. Je vyžadován restart aplikace.";
+
+"FAKE_YOUR_PREMIUM_BENEFITS" = "Your Premium benefits";
+"FAKE_DOWNLOADS" = "Downloads";

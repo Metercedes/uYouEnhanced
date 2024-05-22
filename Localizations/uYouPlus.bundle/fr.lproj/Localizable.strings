@@ -61,7 +61,7 @@
 "STOCK_VOLUME_HUD_DESC" = "";
 
 // Video controls overlay options
-"VIDEO_PLAYER_OPTIONS" = "📹 Options de superposition des contrôles vidéo";
+"VIDEO_CONTROLS_OVERLAY_OPTIONS" = "📹 Options de superposition des contrôles vidéo";
 
 "HIDE_AUTOPLAY_SWITCH" = "Masquer l'interrupteur de lecture automatique";
 "HIDE_AUTOPLAY_SWITCH_DESC" = "Masquer le bouton de lecture automatique dans la superposition des contrôles vidéo";
@@ -147,3 +147,6 @@
 
 "FIX_GOOGLE_SIGNIN" = "Réparer l'identification Google (pour les utilisateurs de TrollStore uniquement)";
 "FIX_GOOGLE_SIGNIN_DESC" = "Activez cette option uniquement si vous ne pouvez pas vous connecter avec votre compte Google et que l'application a été installée via TrollStore. Si vous pouvez vous connecter normalement, laissez-la désactivée. Un redémarrage de l'application est nécessaire.";
+
+"FAKE_YOUR_PREMIUM_BENEFITS" = "Your Premium benefits";
+"FAKE_DOWNLOADS" = "Downloads";
